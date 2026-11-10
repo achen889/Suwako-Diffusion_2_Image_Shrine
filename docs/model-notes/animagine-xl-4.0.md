@@ -42,6 +42,17 @@ Last updated: 2026-11-10
   exploration prompt, not a precise pose lock.
 - Follow-up run: 1024×1024, 28 steps, CFG 5.5, seed 1180008761, four-image batch,
   no input image. Outputs: `outputs/annette/uncategorized/20261110T090742Z_adult_woman_solo_short_wavy_brown_bob_amber_eyes_f742fee4/`.
+- A later generic-prompt batch (seed 1120221725, 1024×1024, 28 steps, CFG 5.5)
+  produced notably clean, polished variants, including images 03 and 04. Its saved
+  final positive prompt measured 93 tokens and its negative prompt 180, both over
+  the 77-token limit. Retokenizing the saved prompts shows that the positive was cut
+  off partway through the pose tags, before the explicit `masterpiece` tag and the
+  app-added enhanced suffix; the negative was cut off during the generic quality
+  terms. The attractive result therefore does **not** establish that those late
+  quality tags improved it. It does support keeping the prompt more generic and
+  concise for creative variants. A controlled next comparison should put
+  `masterpiece` at the beginning in one prompt, omit it in the other, and keep both
+  final prompts and negatives under 77 tokens.
 
 ## Current test recipe
 
