@@ -5,6 +5,14 @@
 Local CUDA / Hugging Face generation **by default**, with optional GPT Image API.
 The service is shared by a Streamlit web UI, a pywebview desktop wrapper, and a CLI.
 
+## Your image shrine
+
+Suwako Diffusion is a local-first studio for creating and curating anime images. Its
+Review Gallery is a personal image shrine: browse generations by character, inspect
+their prompts and settings, save favorites to a `best` collection, download images,
+and remove individual images or selected batches. Generated images and uploads stay
+in local folders on your computer.
+
 ## Windows setup (Python 3.11 or 3.12 recommended)
 
 ```powershell
@@ -84,7 +92,18 @@ Application diagnostics are written continuously to per-process timestamped file
 and also sent to the launcher console when one is available. Logs, uploads, and
 generated output are excluded from Git.
 
-See [CHANGELOG.md](CHANGELOG.md) for the current MVP change history.
+<details>
+<summary>Changelog</summary>
+
+### Unreleased
+
+- Added a collapsible image gallery with per-image review actions and batch deletion.
+- Added a renameable favorites folder, named `best` by default.
+- Added editable character, clothing, pose, background, and recipe presets.
+- Recorded model-specific prompt limits and generation observations in `docs/model-notes/`.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full project history.
+</details>
 
 ## Upload with Git
 

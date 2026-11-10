@@ -12,10 +12,13 @@ Notable Suwako Diffusion changes are recorded here.
 - Moved generation controls into a collapsed advanced section with defaults of 28 steps, 5.5 guidance, seed 0, 1024×1024 resolution, and 0.65 img2img strength.
 - Added per-process application logs with console output and exception tracebacks; desktop Streamlit output is relayed to the launcher console and a timestamped log file.
 - Store generated runs in character folders with readable prompt-based run names.
-- Add a dedicated review gallery with image downloads, confirmed per-image deletion,
-  folder opening, character filtering, and support for legacy output locations.
+- Add a dedicated review gallery with image downloads, per-image deletion, folder
+  opening, character filtering, and support for legacy output locations.
+- Add checkbox-based batch deletion that updates run metadata while keeping unselected
+  images intact.
 - Add per-image thumbs-up and thumbs-down review actions: favorites move into a
-  character-specific `best` folder and dislikes are deleted immediately.
+  character-specific `best` folder by default, with a gallery option to rename it;
+  dislikes are deleted immediately.
 - Add a latest-batch curation panel on the Generate tab, with the same actions as
   the saved Review gallery.
 - Add a saved-preset editor that writes character, clothing, pose, and background tag
