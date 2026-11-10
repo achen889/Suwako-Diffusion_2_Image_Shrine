@@ -1,0 +1,4 @@
+{
+  "schema_version": 1,
+  "default_negative_prompt": "(worst quality:1.4), (low quality:1.4), (monochrome:1.1), (bad_prompt_version2:0.8), jpeg, watermark, artist sign, blurry, out of frame, NSFW, ((bad anatomy)), ((bad hands)), multiple arms, multiple hands, missing finger, extra digits, fewer digits, ((mutated hands and fingers)), (poorly drawn face), ((mutation)), ((deformed face)), (ugly), ((bad proportions)), ((extra limbs)), extra face, (double head), (extra head), ((extra feet)), highly rendered, ((realistic)), (realism), ((cross)), nipples, nudity"
+}

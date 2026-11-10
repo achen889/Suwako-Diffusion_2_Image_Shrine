@@ -1,0 +1,9 @@
+diffusers>=0.35,<1
+transformers>=4.45,<6
+accelerate>=1.0,<3
+safetensors>=0.4
+huggingface_hub>=0.25
+pillow>=10.4
+streamlit>=1.44,<3
+openai>=2,<4
+python-dotenv>=1.0

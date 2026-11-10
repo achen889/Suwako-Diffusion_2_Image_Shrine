@@ -1,0 +1,24 @@
+# Changelog
+
+Notable Suwako Diffusion changes are recorded here.
+
+## Unreleased
+
+- Added a once-per-second elapsed timer that includes model loading, generation, and saving.
+- Kept generation on a single serialized GPU worker while Streamlit polls progress events.
+- Split prompt components into JSON files under `data/presets/` for characters, clothing, poses, backgrounds, and other tags.
+- Migrated the legacy character, outfit, pose, background, style, and named example combinations into the preset catalog.
+- Added tabbed prompt editing and an editable assembled prompt, with prompt source selections saved in run metadata.
+- Moved generation controls into a collapsed advanced section with defaults of 28 steps, 5.5 guidance, seed 0, 1024×1024 resolution, and 0.65 img2img strength.
+- Added per-process application logs with console output and exception tracebacks; desktop Streamlit output is relayed to the launcher console and a timestamped log file.
+- Store generated runs in character folders with readable prompt-based run names.
+- Add a dedicated review gallery with image downloads, confirmed per-image deletion,
+  folder opening, character filtering, and support for legacy output locations.
+- Add per-image thumbs-up and thumbs-down review actions: favorites move into a
+  character-specific `best` folder and dislikes are deleted immediately.
+- Add a latest-batch curation panel on the Generate tab, with the same actions as
+  the saved Review gallery.
+- Add a saved-preset editor that writes character, clothing, pose, and background tag
+  changes back to their JSON files.
+- Group reference-image inputs and img2img strength in a collapsed options section,
+  with previews for uploaded reference images.

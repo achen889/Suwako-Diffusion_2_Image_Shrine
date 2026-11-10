@@ -1,0 +1,11 @@
+{
+  "key": "annette_5",
+  "name": "Annette 5 · Pretzel studio study",
+  "components": {
+    "characters": ["annette"],
+    "clothing": ["annette_leotard"],
+    "poses": ["pretzel"],
+    "backgrounds": ["house_of_forms_studio"],
+    "other": []
+  }
+}
