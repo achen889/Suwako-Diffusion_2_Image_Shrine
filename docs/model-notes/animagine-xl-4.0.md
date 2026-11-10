@@ -53,6 +53,16 @@ Last updated: 2026-11-10
   concise for creative variants. A controlled next comparison should put
   `masterpiece` at the beginning in one prompt, omit it in the other, and keep both
   final prompts and negatives under 77 tokens.
+- A subsequent simple Pretzel batch (seed 1823539375, 1024×1024, 28 steps, CFG 5.5)
+  measured 82 positive tokens and 180 negative tokens. Truncation still occurred,
+  but this shorter prompt placed the manual `masterpiece` tag and the app-added
+  `masterpiece` before token 77; only the later enhanced tags (`great score`,
+  `absurdres`) were cut off. Unlike the 93-token run, this one used the original
+  compact Pretzel tags without the harness/rope pose preset and produced four useful
+  variations. The user characterized them as: 1) pretzel-themed product endorsement,
+  2) a good partial crop, 3) casual resting, and 4) an excellent general pose
+  reference. This is promising evidence for a concise pose prompt plus an early
+  quality tag, though it is not a controlled A/B comparison.
 
 ## Current test recipe
 
