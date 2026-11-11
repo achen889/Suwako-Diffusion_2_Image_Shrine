@@ -80,6 +80,53 @@ def recent_runs(root: Path = OUTPUT_ROOT, limit: int = 30):
     return results
 
 
+def empty_run_folders(root: Path = OUTPUT_ROOT) -> list[Path]:
+    """Find output run folders containing valid metadata and no other files."""
+    root = root.resolve()
+    if not root.is_dir():
+        return []
+    empty = []
+    for metadata_file in root.rglob("metadata.json"):
+        directory = metadata_file.parent
+        if (not directory.is_dir() or directory.is_symlink()
+                or directory.resolve() == root
+                or not directory.resolve().is_relative_to(root)):
+            continue
+        try:
+            data = json.loads(metadata_file.read_text(encoding="utf-8"))
+            entries = list(directory.iterdir())
+        except (OSError, ValueError, TypeError):
+            continue
+        if (isinstance(data, dict)
+                and isinstance(data.get("images"), list)
+                and len(entries) == 1
+                and entries[0].name == "metadata.json"
+                and entries[0].is_file()
+                and not entries[0].is_symlink()):
+            empty.append(directory)
+    return empty
+
+
+def cleanup_empty_run_folders(root: Path = OUTPUT_ROOT) -> list[Path]:
+    """Remove only run folders that contain a valid metadata.json and nothing else."""
+    root = root.resolve()
+    removed = []
+    for directory in empty_run_folders(root):
+        metadata_file = directory / "metadata.json"
+        if (not directory.resolve().is_relative_to(root)
+                or directory.is_symlink()
+                or not metadata_file.is_file()
+                or metadata_file.is_symlink()):
+            continue
+        entries = list(directory.iterdir())
+        if len(entries) != 1 or entries[0] != metadata_file:
+            continue
+        metadata_file.unlink()
+        directory.rmdir()
+        removed.append(directory)
+    return removed
+
+
 def _write_metadata(directory: Path, data: dict) -> None:
     metadata_file = directory / "metadata.json"
     temp = metadata_file.with_suffix(".json.tmp")

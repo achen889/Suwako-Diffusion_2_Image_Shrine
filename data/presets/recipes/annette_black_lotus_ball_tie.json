@@ -1,0 +1,19 @@
+{
+  "key": "annette_black_lotus_ball_tie",
+  "name": "Annette · Black Lotus ball tie",
+  "components": {
+    "characters": [
+      "annette"
+    ],
+    "clothing": [
+      "annette_leotard"
+    ],
+    "poses": [
+      "ball_tie"
+    ],
+    "backgrounds": [
+      "black_lotus_vip_lounge"
+    ],
+    "other": []
+  }
+}

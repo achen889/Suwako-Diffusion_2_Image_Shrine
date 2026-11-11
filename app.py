@@ -11,13 +11,16 @@ import threading
 import time
 import traceback
 
+from PIL import Image, ImageOps
 import streamlit as st
 
 from suwako.history import (
     OUTPUT_ROOT,
     best_folder_name,
+    cleanup_empty_run_folders,
     discard_image,
     discard_images,
+    empty_run_folders,
     keep_best,
     recent_runs,
     rename_best_folder,
@@ -74,7 +77,13 @@ def apply_recipe(config: dict):
     if recipe is None:
         return
     for category in ("characters", "clothing", "poses", "backgrounds", "other"):
-        selected = recipe.get("components", {}).get(category, [])
+        selected = list(recipe.get("components", {}).get(category, []))
+        if category == "other" and "masterpiece_suffix" in {
+            item["key"] for item in config["categories"]["other"]
+        }:
+            selected = ["masterpiece_suffix", *[
+                key for key in selected if key != "masterpiece_suffix"
+            ]]
         st.session_state[f"{category}_components"] = selected
         st.session_state[f"{category}_tags"] = tags_for_components(
             config["categories"][category], selected
@@ -107,7 +116,7 @@ def initialize_prompt_state(config: dict):
         "clothing": ["suwako_clothing"],
         "poses": [],
         "backgrounds": ["suwako_shrine_pond"],
-        "other": [],
+        "other": ["masterpiece_suffix"],
     }
     for category, selected in initial.items():
         existing = {item["key"] for item in config["categories"][category]}
@@ -182,6 +191,28 @@ def st_gallery_fancy():
                 st.rerun()
 
     runs = recent_runs(OUTPUT_ROOT, limit=200)
+    empty_folders = empty_run_folders(OUTPUT_ROOT)
+    with st.expander(f"Clean up empty run folders ({len(empty_folders)})", expanded=False):
+        if empty_folders:
+            st.caption("These folders contain valid run metadata and no images or other files.")
+            for directory in empty_folders[:30]:
+                st.code(str(directory.relative_to(output_root)), language=None)
+            if len(empty_folders) > 30:
+                st.caption(f"And {len(empty_folders) - 30} more metadata-only folders.")
+            if st.button(
+                f"Delete {len(empty_folders)} empty run folders",
+                key="gallery-clean-empty-runs",
+                help="Remove only the listed run folders, each containing metadata.json and nothing else.",
+            ):
+                try:
+                    removed = cleanup_empty_run_folders(OUTPUT_ROOT)
+                except OSError as exc:
+                    st.error(f"Could not clean up empty run folders: {exc}")
+                else:
+                    st.success(f"Removed {len(removed)} empty run folder(s).")
+                    st.rerun()
+        else:
+            st.caption("No metadata-only run folders to remove.")
 
     def is_best_directory(directory, data):
         return bool(data.get("best_of")) or directory.parent.name.casefold() in {
@@ -332,11 +363,63 @@ def st_latest_run_curation():
     if not images:
         return
     with st.expander("Curate latest batch", expanded=False):
+        batch_message = st.session_state.pop("_latest_batch_message", None)
+        if batch_message:
+            st.warning(batch_message)
+        st.caption(f"{len(images)} image(s) · previews are shown at a fixed 360 × 360 px.")
+        batch_actions = st.columns(2)
+        with batch_actions[0]:
+            if st.button(
+                f"👍 Keep all {len(images)} as best",
+                key=f"latest-best-all-{directory.name}",
+                use_container_width=True,
+                help="Move every remaining image in this batch to the best folder.",
+            ):
+                moved = 0
+                try:
+                    for name in images:
+                        keep_best(directory, name, OUTPUT_ROOT)
+                        moved += 1
+                except (OSError, ValueError) as exc:
+                    st.session_state["_latest_batch_message"] = (
+                        f"Moved {moved} image(s) before stopping: {exc}"
+                    )
+                    st.rerun()
+                else:
+                    st.success(f"Moved {moved} image(s) to the best folder.")
+                    st.rerun()
+        with batch_actions[1]:
+            confirm_delete = st.checkbox(
+                f"Confirm deleting all {len(images)} images",
+                key=f"latest-confirm-delete-{directory.name}",
+            )
+            if st.button(
+                f"👎 Delete all {len(images)}",
+                key=f"latest-delete-all-{directory.name}",
+                disabled=not confirm_delete,
+                use_container_width=True,
+                help="Permanently delete all remaining images in this batch.",
+            ):
+                try:
+                    deleted = discard_images(
+                        [(directory, name) for name in images], OUTPUT_ROOT
+                    )
+                except (OSError, ValueError) as exc:
+                    st.error(f"Could not delete the batch: {exc}")
+                else:
+                    st.success(f"Deleted {deleted} image(s).")
+                    st.rerun()
+
         columns = st.columns(min(4, len(images)))
         for column, name in zip(columns, images):
             file = directory / name
             with column:
-                st.image(str(file), use_container_width=True)
+                with Image.open(file) as source:
+                    preview = Image.new("RGB", (360, 360), "#161616")
+                    fitted = ImageOps.contain(source.convert("RGB"), preview.size)
+                    preview.paste(fitted, ((360 - fitted.width) // 2,
+                                           (360 - fitted.height) // 2))
+                st.image(preview, width=360)
                 actions = st.columns(2)
                 with actions[0]:
                     if st.button(

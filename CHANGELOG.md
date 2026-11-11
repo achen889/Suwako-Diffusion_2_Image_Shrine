@@ -4,6 +4,8 @@ Notable Suwako Diffusion changes are recorded here.
 
 ## Unreleased
 
+- Add compact hogtie, ball-tie, and carried-hogtie pose presets.
+- Add Black Lotus grand lobby and VIP lounge environment presets, with Annette test recipes.
 - Added a once-per-second elapsed timer that includes model loading, generation, and saving.
 - Kept generation on a single serialized GPU worker while Streamlit polls progress events.
 - Split prompt components into JSON files under `data/presets/` for characters, clothing, poses, backgrounds, and other tags.
@@ -16,6 +18,8 @@ Notable Suwako Diffusion changes are recorded here.
   opening, character filtering, and support for legacy output locations.
 - Add checkbox-based batch deletion that updates run metadata while keeping unselected
   images intact.
+- Add a gallery cleanup action for run folders that contain metadata but no images.
+- Add a default `masterpiece` suffix preset to the Other prompt group.
 - Add per-image thumbs-up and thumbs-down review actions: favorites move into a
   character-specific `best` folder by default, with a gallery option to rename it;
   dislikes are deleted immediately.

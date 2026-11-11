@@ -76,12 +76,14 @@ images go into a `best` folder by default; the gallery can rename that collectio
 across characters. Character folders come from
 the selected character preset; runs without one (including CLI runs) are stored under
 `outputs/uncategorized/`. Older runs directly under `outputs/` remain visible. Uploaded
-input files are cached in `uploads/`.
+input files are cached in `uploads/`. The gallery can also remove run folders whose
+metadata remains after every image has been deleted.
 No image files or Hugging Face model weights are bundled in this project.
 
 Prompt components and recipes are editable JSON files under `data/presets/`.
 They are organized into `characters/`, `clothing/`, `poses/`, `backgrounds/`,
 `other/`, and `recipes/`; `defaults.json` contains the standard negative prompt.
+The `other/` group includes a `masterpiece` suffix preset selected by default.
 The Generate tab shows a saved-preset text editor directly below the selected
 character, clothing, pose, or background preset. Edit its comma-separated tags and
 save to write the changes back to that preset's JSON file. Each generated run records the selected
