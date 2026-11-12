@@ -1,0 +1,11 @@
+{
+  "key": "alexa_competition_pool",
+  "name": "Alexa · Competition swimsuit poolside",
+  "components": {
+    "characters": ["alexa_mikazuchi"],
+    "clothing": ["alexa_competition_swimsuit"],
+    "poses": [],
+    "backgrounds": ["indoor_competition_pool"],
+    "other": []
+  }
+}

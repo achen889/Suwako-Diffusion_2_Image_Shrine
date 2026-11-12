@@ -5,6 +5,7 @@ from pathlib import Path
 from PIL import Image
 
 from suwako.models import ImageRequest
+from suwako.library import Library
 from suwako.prompts import compose
 from suwako.workflow import run_generation
 
@@ -51,13 +52,39 @@ class SuwakoTests(unittest.TestCase):
 
     def test_saved_image_count_and_metadata(self):
         request = ImageRequest("frog shrine", count=4)
-        with tempfile.TemporaryDirectory() as tmp:
-            directory = run_generation(request, Path(tmp), FakeProvider())
-            files = sorted(directory.glob("image_*.png"))
-            self.assertEqual(len(files), 4)
+        temporary_root = Path(__file__).resolve().parents[1] / ".test-tmp"
+        temporary_root.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=temporary_root) as tmp:
+            root = Path(tmp)
+            directory = run_generation(request, root, FakeProvider())
             data = json.loads((directory / "metadata.json").read_text(encoding="utf-8"))
+            files = sorted((root / "library" / "Inbox").glob("image_*.png"))
+            self.assertEqual(len(files), 4)
             self.assertEqual(data["count"], 4)
             self.assertEqual(data["per_image_seeds"], [123, 124, 125, 126])
+            self.assertEqual(len(data["asset_ids"]), 4)
+            catalog = Library(root)
+            self.assertEqual(len([catalog.get_asset(item) for item in data["asset_ids"]]), 4)
+
+    def test_img2img_run_records_source_asset_and_preserves_source(self):
+        temporary_root = Path(__file__).resolve().parents[1] / ".test-tmp"
+        temporary_root.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=temporary_root) as tmp:
+            root = Path(tmp)
+            library = Library(root)
+            original = root / "source.png"
+            Image.new("RGB", (64, 64), "blue").save(original)
+            source_id = library.import_image(original)
+            source = library.get_asset(source_id)
+            request = ImageRequest("make this a watercolor", count=1,
+                                   input_image=source.path)
+            run = run_generation(request, root, FakeProvider(),
+                                 input_asset_id=source_id)
+            metadata = json.loads((run / "metadata.json").read_text(encoding="utf-8"))
+
+            self.assertEqual(metadata["input_asset_id"], source_id)
+            self.assertTrue(source.path.is_file())
+            self.assertEqual(metadata["asset_ids"], [library.list_assets(limit=20)[0].asset_id])
 
 
 if __name__ == "__main__":

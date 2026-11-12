@@ -15,7 +15,8 @@ _LOCAL = LocalCudaProvider()
 
 def run_generation(request: ImageRequest, root: Path = OUTPUT_ROOT, provider=None, *,
                    strategy="batch", progress_callback=None, image_callback=None,
-                   stage_callback=None, prompt_sources: dict | None = None) -> Path:
+                   stage_callback=None, prompt_sources: dict | None = None,
+                   input_asset_id: str | None = None) -> Path:
     request.validate()
     backend = provider or (_LOCAL if request.provider == "local" else OpenAIProvider())
     started = perf_counter()
@@ -38,6 +39,8 @@ def run_generation(request: ImageRequest, root: Path = OUTPUT_ROOT, provider=Non
     details["inference_seconds"] = round(generated - started, 3)
     if prompt_sources is not None:
         details["prompt_sources"] = prompt_sources
+    if input_asset_id is not None:
+        details["input_asset_id"] = input_asset_id
     if stage_callback:
         stage_callback("Saving generated images and metadata…")
     directory = save_run(request, images, details, generated - started, root)

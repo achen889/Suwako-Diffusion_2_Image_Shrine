@@ -10,6 +10,7 @@ import re
 import uuid
 
 from .models import ImageRequest
+from .library import Library
 
 OUTPUT_ROOT = Path(__file__).resolve().parents[1] / "outputs"
 GALLERY_SETTINGS_NAME = ".gallery-settings.json"
@@ -35,27 +36,103 @@ def _character_folder(details: dict) -> str:
     return "multiple_characters"
 
 
+def _image_filename(request: ImageRequest, index: int, details: dict,
+                    run_name: str) -> str:
+    """Build a portable filename from selected presets and image-specific metadata."""
+    sources = details.get("prompt_sources") or {}
+    categories = sources.get("categories") if isinstance(sources, dict) else {}
+    if not isinstance(categories, dict):
+        categories = {}
+    selected = {}
+    for category in ("characters", "clothing", "poses", "backgrounds"):
+        component = categories.get(category) or {}
+        values = component.get("preset_groups") if isinstance(component, dict) else []
+        values = values or []
+        if isinstance(values, str):
+            values = [values]
+        if isinstance(values, list) and values:
+            selected[category] = _safe_slug(str(values[0]), "")
+
+    character_key = selected.get("characters", "")
+    character = character_key.split("_", 1)[0]
+    clothing = selected.get("clothing", "")
+    if character_key and clothing.startswith(character_key + "_"):
+        clothing = clothing[len(character_key) + 1:]
+    elif character and clothing.startswith(character + "_"):
+        clothing = clothing.split("_", 1)[1]
+    clothing = clothing.replace("competition", "comp")
+    background = selected.get("backgrounds", "").replace("_competition", "")
+    parts = [
+        part for part in (
+            character, clothing, selected.get("poses", ""), background,
+        ) if part
+    ]
+    context = "_".join(parts)
+    if len(context) > 38 and background and background in parts:
+        parts.remove(background)
+        context = "_".join(parts)
+    if not context:
+        context = _safe_slug(request.prompt, "image")
+    context = context[:38].rstrip("_") or "image"
+
+    seeds = details.get("per_image_seeds") or []
+    try:
+        seed = int(seeds[index - 1])
+    except (IndexError, TypeError, ValueError):
+        try:
+            seed = int(details.get("seed", request.seed))
+        except (TypeError, ValueError):
+            seed = 0
+    model = _safe_slug(request.model, "model")
+    if model.startswith("gpt_image_"):
+        model = "openai_" + model.rsplit("_", 1)[-1][:8]
+    else:
+        model = model[:10].rstrip("_") or "model"
+    run_id = run_name.rsplit("_", 1)[-1][:8]
+    return f"image_{index:02d}_{context}_{model}_s{seed}_r{run_id}.png"
+
+
 def save_run(request: ImageRequest, images, details: dict, elapsed: float,
              root: Path = OUTPUT_ROOT) -> Path:
     now = datetime.now(timezone.utc)
     prompt_slug = _safe_slug(request.prompt, "image")
     run_name = (now.strftime("%Y%m%dT%H%M%SZ") + "_" + prompt_slug[:48].rstrip("_")
                 + "_" + uuid.uuid4().hex[:8])
-    directory = root / _character_folder(details) / run_name
+    directory = root / "runs" / run_name
     directory.mkdir(parents=True, exist_ok=False)
+    library = Library(root)
     names = []
-    for index, img in enumerate(images, 1):
-        name = f"image_{index:02d}.png"
-        img.save(directory / name, format="PNG")
-        names.append(name)
-    data = asdict(request)
-    data["input_image"] = str(request.input_image) if request.input_image else None
-    data["reference_images"] = [str(p) for p in request.reference_images]
-    data.update(schema_version=3, created_at=now.isoformat(),
-                elapsed_seconds=round(elapsed, 3), images=names, **details)
-    temp = directory / "metadata.json.tmp"
-    temp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-    temp.replace(directory / "metadata.json")
+    asset_ids = []
+    saved_paths = []
+    try:
+        for index, img in enumerate(images, 1):
+            name = _image_filename(request, index, details, run_name)
+            image_path = library.inbox / name
+            img.save(image_path, format="PNG")
+            saved_paths.append(image_path)
+            asset_id = library.register_image(
+                image_path, origin="generated", run_id=run_name,
+                created_at=now.isoformat(), display_name=name,
+                prompt=request.prompt, model=request.model,
+            )
+            names.append(name)
+            asset_ids.append(asset_id)
+        data = asdict(request)
+        data["input_image"] = str(request.input_image) if request.input_image else None
+        data["reference_images"] = [str(p) for p in request.reference_images]
+        data.update(schema_version=4, run_id=run_name, created_at=now.isoformat(),
+                    elapsed_seconds=round(elapsed, 3), images=names,
+                    asset_ids=asset_ids, **details)
+        temp = directory / "metadata.json.tmp"
+        temp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        temp.replace(directory / "metadata.json")
+    except Exception:
+        if asset_ids:
+            library.remove_assets(asset_ids)
+        for image_path in saved_paths:
+            image_path.unlink(missing_ok=True)
+        shutil.rmtree(directory, ignore_errors=True)
+        raise
     return directory
 
 
@@ -88,6 +165,8 @@ def empty_run_folders(root: Path = OUTPUT_ROOT) -> list[Path]:
     empty = []
     for metadata_file in root.rglob("metadata.json"):
         directory = metadata_file.parent
+        if directory.is_relative_to(root / "runs"):
+            continue
         if (not directory.is_dir() or directory.is_symlink()
                 or directory.resolve() == root
                 or not directory.resolve().is_relative_to(root)):
@@ -166,6 +245,10 @@ def rename_best_folder(name: str, root: Path = OUTPUT_ROOT) -> str:
         return old_name
 
     plans = []
+    library = Library(root)
+    library_album_exists = any(item.casefold() == old_name.casefold()
+                               for item in library.albums())
+    library_renamed = False
     for character_dir in root.iterdir():
         if (not character_dir.is_dir() or character_dir.name.startswith(".")
                 or (character_dir / "metadata.json").is_file()):
@@ -192,6 +275,9 @@ def rename_best_folder(name: str, root: Path = OUTPUT_ROOT) -> str:
     moved = []
     created_destinations = []
     try:
+        if library_album_exists:
+            library.rename_album(old_name, name)
+            library_renamed = True
         for source, destination, merge in plans:
             if merge:
                 destination.mkdir(parents=True, exist_ok=True)
@@ -218,6 +304,11 @@ def rename_best_folder(name: str, root: Path = OUTPUT_ROOT) -> str:
         for destination in reversed(created_destinations):
             try:
                 destination.rmdir()
+            except OSError:
+                pass
+        if library_renamed:
+            try:
+                library.rename_album(name, old_name)
             except OSError:
                 pass
         raise

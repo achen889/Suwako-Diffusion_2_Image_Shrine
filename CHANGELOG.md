@@ -4,6 +4,17 @@ Notable Suwako Diffusion changes are recorded here.
 
 ## Unreleased
 
+- Add a searchable picture library with physical Inbox and album folders, tags, batch
+  moves, multi-file imports, and paged thumbnail browsing.
+- Store generation manifests separately from library images and link them with stable
+  asset IDs; record library-selected img2img source assets in new runs.
+- Add verified, rollback-safe migration from legacy character/run output folders.
+- Start new sessions with Alexa's compact competition-pool setup and allow saving the current local configuration for next time.
+- Trim the default negative prompt to reduce CLIP token truncation.
+- Include selected preset context, model, seed, and run ID in future image filenames.
+- Add Alexa competition swimsuit and indoor competition pool presets.
+- Add a compact Alexa competition-pool recipe for pose testing.
+- Add Alexa Mikazuchi character and rigging-swimsuit presets.
 - Add compact hogtie, ball-tie, and carried-hogtie pose presets.
 - Add Black Lotus grand lobby and VIP lounge environment presets, with Annette test recipes.
 - Added a once-per-second elapsed timer that includes model loading, generation, and saving.

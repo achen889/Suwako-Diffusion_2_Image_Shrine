@@ -69,21 +69,31 @@ API billing is separate from ChatGPT subscriptions. No OpenAI key is needed loca
 - Only one generating worker per CUDA device. Multiple CPU threads do not guarantee faster inference.
 - Model licenses and any local source/reference image rights remain the user's responsibility.
 
-Images and `metadata.json` live under `outputs/<character>/<timestamp>_<prompt>_<id>/`.
-The Streamlit **Review gallery** tab shows saved images, supports downloading and deleting
-individual or checked batches of images, and can open a run's folder in Explorer. Thumbs-up
-images go into a `best` folder by default; the gallery can rename that collection folder
-across characters. Character folders come from
-the selected character preset; runs without one (including CLI runs) are stored under
-`outputs/uncategorized/`. Older runs directly under `outputs/` remain visible. Uploaded
-input files are cached in `uploads/`. The gallery can also remove run folders whose
-metadata remains after every image has been deleted.
+Generated and imported pictures live under `outputs/library/Inbox/` or
+`outputs/library/Albums/<album>/`. The searchable catalog is stored in
+`outputs/library/catalog.sqlite3`; small gallery previews are cached under
+`outputs/library/.thumbnails/`. Generation settings and provenance live separately in
+`outputs/runs/<run-id>/metadata.json`, with stable asset IDs linking each run to its images.
+New generations and imported pictures start in Inbox. Imports copy files into the library
+and leave the source files untouched.
+
+The Streamlit **Review gallery** tab works as a local picture organizer. Search by name,
+prompt, model, or tag; filter by Inbox or album; create and rename albums; apply tags; move
+selected images in batches; download or delete pictures. Thumbs-up images go to the
+configured Best album. The gallery shows up to 48 thumbnail cards per page. Use **Migrate
+legacy generations** to move old run images into the new layout; migration verifies files
+and retains run metadata. Selecting **Use as img2img input** on a picture makes it the next
+reference image in Generate; the original stays unchanged and the new run records the source
+asset ID. Uploaded input files are cached in `uploads/`.
 No image files or Hugging Face model weights are bundled in this project.
 
 Prompt components and recipes are editable JSON files under `data/presets/`.
 They are organized into `characters/`, `clothing/`, `poses/`, `backgrounds/`,
 `other/`, and `recipes/`; `defaults.json` contains the standard negative prompt.
 The `other/` group includes a `masterpiece` suffix preset selected by default.
+On first launch, the Generate tab starts with Alexa's competition-pool recipe.
+Use **Save this setup for next time** to remember prompt selections and generation
+settings locally; uploaded reference images are not saved with the configuration.
 The Generate tab shows a saved-preset text editor directly below the selected
 character, clothing, pose, or background preset. Edit its comma-separated tags and
 save to write the changes back to that preset's JSON file. Each generated run records the selected
@@ -99,8 +109,9 @@ generated output are excluded from Git.
 
 ### Unreleased
 
-- Added a collapsible image gallery with per-image review actions and batch deletion.
-- Added a renameable favorites folder, named `best` by default.
+- Added a searchable picture library with physical albums, tags, batch moves, imports,
+  and paged thumbnail browsing.
+- Added legacy generation migration and library-image selection for img2img.
 - Added editable character, clothing, pose, background, and recipe presets.
 - Recorded model-specific prompt limits and generation observations in `docs/model-notes/`.
 

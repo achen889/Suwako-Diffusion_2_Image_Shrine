@@ -19,6 +19,10 @@ benchmarks, not as proven results of this implementation.
 - Prompt exact/enhanced modes, negative prompt, resolution, steps, CFG, seed, image count.
 - Optional OpenAI `gpt-image-2.6-flare` and `gpt-image-2.6-sunburst` provider.
 - CLI, Streamlit app, pywebview desktop wrapper, JSON metadata and persistent gallery.
+- Physical image-library folders (Inbox and albums), SQLite catalog, tags, imports,
+  paged search, batch organization, and verified legacy-output migration.
+- Run manifests retain settings and link stable asset IDs; library images can be selected
+  as img2img inputs and are recorded as source assets for the resulting run.
 - Categorized JSON prompt presets, assembled/editable prompts, example recipes, and per-image progress.
 - One-second elapsed timer while the serialized generation worker loads, generates, and saves.
 - Timestamped console/file diagnostics and generation source selections in run metadata.
@@ -72,7 +76,7 @@ future comparisons, not a promise of the progress UI's performance.
   Prompt enhancement must remain opt-in, reversible, and visible before generation.
 - Add img2img/inpainting mask editor, ControlNet/IP-Adapter/reference image support.
 - Restore the original side-by-side compare action (two local models, or optional paid API comparison).
-- Search gallery by prompt/model/tags and regenerate from saved settings.
+- Regenerate from saved settings in the image library.
 - Import/export reproducible prompt recipe JSON, image PNG metadata.
 - Add a small local image-captioning/tagging provider based on `labs/ai/booru_test.py`,
   WITHOUT automatically crawling remote booru sites. Respect licensing/site terms.
